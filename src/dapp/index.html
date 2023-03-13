@@ -18,9 +18,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
     </nav>
-
     <main class="container">
-
         <div id="display-wrapper" class="top-20">
         </div>
         <div class="row top-20">
@@ -29,23 +27,38 @@
     </main>
 
     <main class="container top-20">
+        <h2>Register Airline</h2>
+        <div class="row top-20">
+            <label class="form">Airline</label> <input type="text" id="reg-airline-name"> 
+            <label class="form">Address</label> <input type="text" id="reg-airline-address"> 
+            <btn class="btn btn-primary" id="register-airline">Register</btn>
+        </div>
+    </main>
+
+    <main class="container top-20">
+        <h2>Register Flight</h2>
+        <div class="row top-20">
+            <label class="form">Flight</label> <input type="text" id="reg-flight-number"> 
+            <btn class="btn btn-primary" id="register-flight">Register</btn>
+        </div>
+    </main>
+
+    <main class="container top-20">
         <h2>Buy insurance</h2>
         <div class="row top-20">
             <label class="form">Airline</label> <select id="buy-insurance-airline"></select>
             <label class="form">Flight</label> <select id="buy-insurance-flight-number"></select>
-            <label class="form">Insurance Ammount</label> <input type="number" min="0" max="1" step="0.1" id="buy-insurance-ammount">
+            <label class="form">Insurance Amount</label> <input type="number" min="0" max="1" step="0.1" id="buy-insurance-amount">
             <btn class="btn btn-primary" id="buy-insurance">Buy</btn>
         </div>
-        <div id="buy-insurance-result"></div>
     </main>
 
     <main class="container top-20">
         <h2>Pay Out</h2>
         <div class="row top-20">
-            <label class="form">Amount</label> <input type="text" id="flight-number"> 
-            <btn class="btn btn-primary" id="pay-insurance">Pay</btn>
+            <label class="form">Amount</label> <input type="text" id="pay-amount"> 
+            <btn class="btn btn-primary" id="pay-out">Pay</btn>
         </div>
-        <div id="pay-insurance-result"></div>
     </main>
 
 </body>

@@ -9,7 +9,7 @@ contract('Flight Surety Tests', async (accounts) => {
   before('setup contract', async () => {
     config = await Test.Config(accounts);
     await config.flightSuretyData.authorizeCaller(config.flightSuretyApp.address);
-    await config.flightSuretyApp.registerAirline(config.firstAirline);
+    await config.flightSuretyApp.registerAirline(config.firstAirline, "AIR1");
   });
 
   // Watch contract events
@@ -86,7 +86,7 @@ contract('Flight Surety Tests', async (accounts) => {
 
     // ACT
     try {
-      await config.flightSuretyApp.registerAirline(newAirline, { from: config.firstAirline });
+      await config.flightSuretyApp.registerAirline(newAirline, "AIR2", { from: config.firstAirline });
     }
     catch (e) {
 
@@ -108,7 +108,7 @@ contract('Flight Surety Tests', async (accounts) => {
     await config.flightSuretyApp.fund({ from: config.firstAirline, value: Web3.utils.toWei('10', 'ether') });
 
     // ACT
-    await config.flightSuretyApp.registerAirline(newAirline, { from: config.firstAirline });
+    await config.flightSuretyApp.registerAirline(newAirline, "AIR3", { from: config.firstAirline });
     let result = await config.flightSuretyData.isAirline.call(newAirline, { from: config.flightSuretyApp.address });
 
     // ASSERT
@@ -118,20 +118,20 @@ contract('Flight Surety Tests', async (accounts) => {
 
   it('Registration of fifth and subsequent airlines requires multi-party consensus of 50% of registered airlines', async () => {
     // Starting from 2 registered airlines from above tests
-    await config.flightSuretyApp.registerAirline(accounts[3], { from: config.firstAirline });
+    await config.flightSuretyApp.registerAirline(accounts[3], "AIR4", { from: config.firstAirline });
     assert.equal(await config.flightSuretyData.isAirline.call(accounts[3], { from: config.flightSuretyApp.address }), true, "Airline 3 should be registered");
-    await config.flightSuretyApp.registerAirline(accounts[4], { from: config.firstAirline });
+    await config.flightSuretyApp.registerAirline(accounts[4], "AIR5", { from: config.firstAirline });
     assert.equal(await config.flightSuretyData.isAirline.call(accounts[4], { from: config.flightSuretyApp.address }), true, "Airline 4 should be registered");
 
-    await config.flightSuretyApp.registerAirline(accounts[5], { from: config.firstAirline });
+    await config.flightSuretyApp.registerAirline(accounts[5], "AIR6", { from: config.firstAirline });
     assert.equal(await config.flightSuretyData.isAirline.call(accounts[5], { from: config.flightSuretyApp.address }), false, "Airline 5 should still not be registered");
 
     await config.flightSuretyApp.fund({ from: accounts[2], value: Web3.utils.toWei('10', 'ether') });
     await config.flightSuretyApp.fund({ from: accounts[3], value: Web3.utils.toWei('10', 'ether') });
 
-    await config.flightSuretyApp.registerAirline(accounts[5], { from: accounts[2] });
+    await config.flightSuretyApp.registerAirline(accounts[5], "AIR6", { from: accounts[2] });
     try {
-      await config.flightSuretyApp.registerAirline(accounts[5], { from: accounts[3] });
+      await config.flightSuretyApp.registerAirline(accounts[5], "AIR6", { from: accounts[3] });
     } catch (e) {
       // console.log(e);
       // Fails with modifier: Airline is already registered (because consensus was met in the previous call already)

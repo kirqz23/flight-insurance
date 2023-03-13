@@ -17,11 +17,13 @@ contract FlightSuretyData {
     mapping(address => bool) private authorizedCallers;
 
     struct Airline {
+        string name;
         bool isRegistered;
         bool isFunded;
     }
 
     mapping(address => Airline) private airlines;
+    mapping(string => address) private airlineNames;
     uint256 private numAirlinesRegistered;
     uint256 private numAirlinesFunded;
 
@@ -177,6 +179,24 @@ contract FlightSuretyData {
         return credits[_passenger];
     }
 
+    function getAirline(
+        address _airline
+    ) external view requireAuthCaller returns (Airline memory){
+        return airlines[_airline];
+    }
+
+    function getAirlineAddress(
+        string memory _name
+    ) external view requireAuthCaller returns (address) {
+        return airlineNames[_name];
+    }
+
+    function getFlight(
+        string memory _flight
+    ) external view requireAuthCaller returns (Flight memory) {
+        return flights[_flight];
+    }
+
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
@@ -187,14 +207,19 @@ contract FlightSuretyData {
      *
      */
     function registerAirline(
-        address _newAirline
+        address _newAirline,
+        string memory _name
     ) external requireIsOperational requireAuthCaller {
         require(
             !airlines[_newAirline].isRegistered,
             "Airline is already registered"
         );
+        require(
+            airlineNames[_name] == address(0), "Airline with such name already exits"
+        );
 
-        airlines[_newAirline] = Airline({isRegistered: true, isFunded: false});
+        airlines[_newAirline] = Airline({name: _name, isRegistered: true, isFunded: false});
+        airlineNames[_name] = _newAirline;
         numAirlinesRegistered += 1;
     }
 

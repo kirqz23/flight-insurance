@@ -71,7 +71,7 @@ contract FlightSuretyApp {
             dataContract.isAirline(_address) ||
                 (dataContract.getAirlinesRegistered() == 0 &&
                     msg.sender == contractOwner),
-            "Caller is not an Airline (Contract owner can register only first Airline)"
+            "Caller is not an Airline"
         );
         _;
     }
@@ -120,7 +120,8 @@ contract FlightSuretyApp {
      *
      */
     function registerAirline(
-        address _newAirline
+        address _newAirline,
+        string memory _name
     )
         external
         requireIsOperational
@@ -135,7 +136,7 @@ contract FlightSuretyApp {
         }
 
         if (dataContract.getAirlinesRegistered() < AIRLINES_MIN_COUNT) {
-            dataContract.registerAirline(_newAirline);
+            dataContract.registerAirline(_newAirline, _name);
             success = true;
             votes = 0;
         } else {
@@ -153,7 +154,7 @@ contract FlightSuretyApp {
                 multiCalls[_newAirline].length >=
                 dataContract.getAirlinesRegistered() / 2
             ) {
-                dataContract.registerAirline(_newAirline);
+                dataContract.registerAirline(_newAirline, _name);
                 success = true;
             } else {
                 success = false;
@@ -218,7 +219,12 @@ contract FlightSuretyApp {
      */
     function registerFlight(
         string memory _name
-    ) external requireIsOperational requireFundedAirline(msg.sender) {
+    )
+        external
+        requireIsOperational
+        requireAirline(msg.sender)
+        requireFundedAirline(msg.sender)
+    {
         dataContract.registerFlight(_name, msg.sender, STATUS_CODE_UNKNOWN);
     }
 
