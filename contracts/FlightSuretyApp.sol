@@ -69,8 +69,9 @@ contract FlightSuretyApp {
     modifier requireAirline(address _address) {
         require(
             dataContract.isAirline(_address) ||
-                dataContract.getAirlinesRegistered() == 0,
-            "Caller is not an Airline"
+                (dataContract.getAirlinesRegistered() == 0 &&
+                    msg.sender == contractOwner),
+            "Caller is not an Airline (Contract owner can register only first Airline)"
         );
         _;
     }
@@ -104,6 +105,12 @@ contract FlightSuretyApp {
         return dataContract.isOperational();
     }
 
+    function isFlightRegistered(
+        string memory _flight
+    ) public view returns (bool) {
+        return dataContract.isFlightRegistered(_flight);
+    }
+
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
@@ -120,7 +127,14 @@ contract FlightSuretyApp {
         requireAirline(msg.sender)
         returns (bool success, uint256 votes)
     {
-        if (dataContract.getAirlinesRegistered() <= AIRLINES_MIN_COUNT) {
+        if (dataContract.getAirlinesRegistered() > 0) {
+            require(
+                dataContract.isAirlineFunded(msg.sender),
+                "Airline is not funded"
+            );
+        }
+
+        if (dataContract.getAirlinesRegistered() < AIRLINES_MIN_COUNT) {
             dataContract.registerAirline(_newAirline);
             success = true;
             votes = 0;
@@ -137,7 +151,7 @@ contract FlightSuretyApp {
             multiCalls[_newAirline].push(msg.sender);
             if (
                 multiCalls[_newAirline].length >=
-                dataContract.getAirlinesFunded() / 2
+                dataContract.getAirlinesRegistered() / 2
             ) {
                 dataContract.registerAirline(_newAirline);
                 success = true;
@@ -146,6 +160,7 @@ contract FlightSuretyApp {
             }
             votes = multiCalls[_newAirline].length;
         }
+
         return (success, votes);
     }
 
@@ -165,7 +180,7 @@ contract FlightSuretyApp {
 
     function buy(
         address _airline,
-        bytes32 _flight
+        string memory _flight
     ) external payable requireIsOperational requireFundedAirline(_airline) {
         require(
             msg.value <= PASSANGER_MAX_INSURANCE,
@@ -179,12 +194,30 @@ contract FlightSuretyApp {
         dataContract.buy{value: msg.value}(msg.sender, _flight);
     }
 
+    function pay(uint256 _value) external requireIsOperational {
+        dataContract.pay(msg.sender, _value);
+    }
+
+    function creditInsurees(
+        string memory _flight
+    ) internal requireIsOperational {
+        address[] memory insurees = dataContract.getFlightInsurees(_flight);
+        for (uint i = 0; i < insurees.length; i++) {
+            uint256 value = dataContract.getFlightInsurance(
+                insurees[i],
+                _flight
+            );
+            uint256 creditValue = value + value / 2;
+            dataContract.creditInsuree(insurees[i], _flight, creditValue);
+        }
+    }
+
     /**
      * @dev Register a future flight for insuring.
      *
      */
     function registerFlight(
-        bytes32 _name
+        string memory _name
     ) external requireIsOperational requireFundedAirline(msg.sender) {
         dataContract.registerFlight(_name, msg.sender, STATUS_CODE_UNKNOWN);
     }
@@ -201,15 +234,15 @@ contract FlightSuretyApp {
     ) internal {
         require(statusCode != STATUS_CODE_UNKNOWN, "Flight status UNKNOWN");
         require(
-            dataContract.getFlightAirline(bytes32(bytes(flight))) == airline,
+            dataContract.getFlightAirline(flight) == airline,
             "No flight for such airline"
         );
 
-        dataContract.updateFlightStatus(
-            bytes32(bytes(flight)),
-            statusCode,
-            timestamp
-        );
+        dataContract.updateFlightStatus(flight, statusCode, timestamp);
+
+        if (statusCode == STATUS_CODE_LATE_AIRLINE) {
+            creditInsurees(flight);
+        }
     }
 
     // Generate a request for oracles to fetch flight information
@@ -346,14 +379,6 @@ contract FlightSuretyApp {
             // Handle flight status as appropriate
             processFlightStatus(airline, flight, timestamp, statusCode);
         }
-    }
-
-    function getFlightKey(
-        address airline,
-        string storage flight,
-        uint256 timestamp
-    ) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(airline, flight, timestamp));
     }
 
     // Returns array of three non-duplicating integers from 0-9
