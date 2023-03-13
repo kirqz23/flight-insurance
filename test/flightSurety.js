@@ -12,6 +12,15 @@ contract('Flight Surety Tests', async (accounts) => {
     await config.flightSuretyApp.registerAirline(config.firstAirline);
   });
 
+  // Watch contract events
+  const STATUS_CODE_UNKNOWN = 0;
+  const STATUS_CODE_ON_TIME = 10;
+  const STATUS_CODE_LATE_AIRLINE = 20;
+  const STATUS_CODE_LATE_WEATHER = 30;
+  const STATUS_CODE_LATE_TECHNICAL = 40;
+  const STATUS_CODE_LATE_OTHER = 50;
+  
+
   /****************************************************************************************/
   /* Operations and Settings                                                              */
   /****************************************************************************************/
@@ -124,6 +133,7 @@ contract('Flight Surety Tests', async (accounts) => {
     try {
       await config.flightSuretyApp.registerAirline(accounts[5], { from: accounts[3] });
     } catch (e) {
+      // console.log(e);
       // Fails with modifier: Airline is already registered (because consensus was met in the previous call already)
     }
     assert.equal(await config.flightSuretyData.isAirline.call(accounts[5], { from: config.flightSuretyApp.address }), true, "Airline 5 should be registered");
@@ -140,4 +150,48 @@ contract('Flight Surety Tests', async (accounts) => {
     await config.flightSuretyApp.registerFlight(testFlight, { from: accounts[5] });
     assert.equal(await config.flightSuretyApp.isFlightRegistered.call(testFlight), true, "The flight should be registered");
   });
+
+  it('Passenger may pay up to 1 ether for purchasing flight insurance', async () => {
+    let flight = "ND0001";
+    let passenger = accounts[6];
+    let airline = accounts[2];
+    await config.flightSuretyApp.registerFlight(flight, {from: airline});
+    try {
+      await config.flightSuretyApp.buy(airline, flight, { from: passenger, value: Web3.utils.toWei('2', 'ether') });
+    } catch (e) {
+      // console.log(e);
+      // This should fail on modifier: Too high insurance value
+    }
+    await config.flightSuretyApp.buy(airline, flight, { from: passenger, value: Web3.utils.toWei('1', 'ether') });
+
+    assert.equal(await config.flightSuretyData.getFlightInsurance(passenger, flight, { from: config.flightSuretyApp.address }), Web3.utils.toWei('1', 'ether'), "Passenger should buy insurance up to 1 ether");
+  });
+
+  it('If flight is delayed due to airline fault, passenger receives credit of 1.5X the amount they paid', async () => {
+    let flight = "ND0001";
+    let passenger = accounts[6];
+    let airline = accounts[2];
+    let timestamp = Math.floor(Date.now() / 1000);
+    let insuranceValue = await config.flightSuretyData.getFlightInsurance(passenger, flight, { from: config.flightSuretyApp.address });
+    await config.flightSuretyApp.processFlightStatus(airline, flight, timestamp, STATUS_CODE_LATE_AIRLINE);
+    let creditValue = await config.flightSuretyData.getPassengerCredit(passenger, { from: config.flightSuretyApp.address });
+    //console.log(`Credit: ${creditValue}, Insurance: ${insuranceValue}`);
+    assert.equal(creditValue, insuranceValue*1.5, "Credit value should be 1.5x of insurance value");
+  });
+
+  it('Passenger can withdraw any funds owed to them as a result of receiving credit for insurance payout', async () => {
+    let passenger = accounts[6];
+    let payoutAmount = Web3.utils.toWei('1', 'ether');
+    let creditBefore = await config.flightSuretyData.getPassengerCredit(passenger, { from: config.flightSuretyApp.address });
+    try {
+      await config.flightSuretyApp.pay(Web3.utils.toWei('2', 'ether'), {from: passenger});
+    } catch (e) {
+      // console.log(e);
+      // This will fail with Not enough funds
+    }
+    await config.flightSuretyApp.pay(payoutAmount, {from: passenger});
+    let creditAfter = await config.flightSuretyData.getPassengerCredit(passenger, { from: config.flightSuretyApp.address });
+    assert.equal(creditAfter, creditBefore - payoutAmount, "Passenger payout was not made correctly");
+  });
+
 });

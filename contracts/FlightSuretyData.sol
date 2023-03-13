@@ -36,7 +36,7 @@ contract FlightSuretyData {
     mapping(bytes32 => uint256) private insurances;
     mapping(string => address[]) private flightInsurees;
 
-    mapping(address => uint256) private payouts;
+    mapping(address => uint256) private credits;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -160,15 +160,21 @@ contract FlightSuretyData {
     function getFlightInsurance(
         address _passenger,
         string memory _flight
-    ) external view returns (uint256) {
+    ) external view requireAuthCaller returns (uint256) {
         bytes32 insurance = keccak256(abi.encodePacked(_passenger, _flight));
         return insurances[insurance];
     }
 
     function getFlightInsurees(
         string memory _flight
-    ) external view returns (address[] memory) {
+    ) external view requireAuthCaller returns (address[] memory) {
         return flightInsurees[_flight];
+    }
+
+    function getPassengerCredit(
+        address _passenger
+    ) external view requireAuthCaller returns (uint256) {
+        return credits[_passenger];
     }
 
     /********************************************************************************************/
@@ -211,7 +217,7 @@ contract FlightSuretyData {
         uint8 _status,
         uint256 timestamp
     ) external requireIsOperational requireAuthCaller {
-        require(!flights[_name].isRegistered, "Flight was already registered");
+        require(flights[_name].isRegistered, "Flight is not registered");
         flights[_name].statusCode = _status;
         flights[_name].updatedTimestamp = timestamp;
     }
@@ -243,7 +249,7 @@ contract FlightSuretyData {
     ) external requireAuthCaller requireIsOperational {
         bytes32 insurance = keccak256(abi.encodePacked(_passenger, _flight));
         require(insurances[insurance] > 0, "Insurance is not active");
-        payouts[_passenger] += _value;
+        credits[_passenger] += _value;
         delete insurances[insurance];
     }
 
@@ -255,12 +261,12 @@ contract FlightSuretyData {
         address _passenger,
         uint256 _value
     ) external requireAuthCaller requireIsOperational {
-        require(_value <= payouts[_passenger], "Not enough funds!");
+        require(_value <= credits[_passenger], "Not enough funds!");
         require(
             !airlines[_passenger].isRegistered,
             "Airlines are not allowed to payout!"
         );
-        payouts[_passenger] -= _value;
+        credits[_passenger] -= _value;
         payable(_passenger).transfer(_value);
     }
 

@@ -231,7 +231,7 @@ contract FlightSuretyApp {
         string memory flight,
         uint256 timestamp,
         uint8 statusCode
-    ) internal {
+    ) public requireIsOperational {
         require(statusCode != STATUS_CODE_UNKNOWN, "Flight status UNKNOWN");
         require(
             dataContract.getFlightAirline(flight) == airline,
