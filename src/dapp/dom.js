@@ -1,7 +1,7 @@
 // Source: https://hackernoon.com/how-i-converted-my-react-app-to-vanillajs-and-whether-or-not-it-was-a-terrible-idea-4b14b1b2faff
 
 export default class DOM {
-
+  
     static a = (...args) => DOM.makeElement(`a`, ...args);
     static button = (...args) => DOM.makeElement(`button`, ...args);
     static div = (...args) => DOM.makeElement(`div`, ...args);
