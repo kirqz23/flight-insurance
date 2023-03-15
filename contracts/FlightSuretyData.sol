@@ -51,6 +51,7 @@ contract FlightSuretyData {
     constructor() {
         contractOwner = msg.sender;
         operational = true;
+        registerAirline(msg.sender, "AIR1");
     }
 
     /********************************************************************************************/
@@ -209,7 +210,7 @@ contract FlightSuretyData {
     function registerAirline(
         address _newAirline,
         string memory _name
-    ) external requireIsOperational requireAuthCaller {
+    ) public requireIsOperational requireAuthCaller {
         require(
             !airlines[_newAirline].isRegistered,
             "Airline is already registered"

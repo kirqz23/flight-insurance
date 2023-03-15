@@ -33,8 +33,6 @@ export default class Contract {
 
             // authorize app contract to run data functions
             this.flightSuretyData.methods.authorizeCaller(this.config.appAddress).send({ from: this.owner });
-            // register first airline
-            this.flightSuretyApp.methods.registerAirline(this.airlines[0], "AIR1").send({ from: this.owner });
 
             callback();
         });
