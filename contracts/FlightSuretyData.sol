@@ -303,7 +303,7 @@ contract FlightSuretyData {
     ) public payable requireIsOperational requireAuthCaller {
         funds[_airline] = msg.value;
         airlines[_airline].isFunded = true;
-        numAirlinesFunded.add(1);
+        numAirlinesFunded += 1;
     }
 
     /**
