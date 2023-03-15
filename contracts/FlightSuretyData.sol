@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "../node_modules/@openzeppelin/contracts/utils/math/SafeMath.sol";
-
 contract FlightSuretyData {
-    using SafeMath for uint256;
 
     /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
