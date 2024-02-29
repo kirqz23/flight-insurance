@@ -1,8 +1,8 @@
-# FlightSurety
+# Flight Insurance
 
-FlightSurety is a sample application project for Udacity's Blockchain course.
+Flight Insurance is a dApp for managing flight insurance policies using blockchain technology. It allows users to purchase, track, and manage their flight insurance policies securely on the blockchain. Through smart contracts, Flight Insurance automates claim processing, ensuring efficient and transparent handling of insurance claims. 
 
-## Tools and versions
+## Tools required and versions
 
 * Truffle v5.8.0 (core: 5.8.0)
 * Ganache v7.7.6
@@ -12,7 +12,7 @@ FlightSurety is a sample application project for Udacity's Blockchain course.
 
 ## Install
 
-This repository contains Smart Contract code in Solidity (using Truffle), tests (also using Truffle), dApp scaffolding (using HTML, CSS and JS) and server app scaffolding.
+This repository contains Smart Contract code in Solidity (using Truffle), tests (also using Truffle), dApp scaffolding (using React, NextJS, TailwindCSS, and JS)
 
 To install, download or clone the repo, then:
 
@@ -24,28 +24,15 @@ To install, download or clone the repo, then:
 To run truffle tests:
 
 `truffle test ./test/flightSurety.js` or `npm run test`
-`truffle test ./test/oracles.js`
 
 To use the dapp:
 
 `truffle migrate`
-`npm run dapp`
+`npm run dev`
 
 To view dapp:
 
-`http://localhost:8000`
-
-## Develop Server
-
-`npm run server`
-`truffle test ./test/oracles.js`
-
-## Deploy
-
-To build dapp for prod:
-`npm run dapp:prod`
-
-Deploy the contents of the ./dapp folder
+`http://localhost:3000`
 
 
 ## Resources
