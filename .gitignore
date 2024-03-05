@@ -14,6 +14,8 @@ node_modules/
 
 # production
 build/
+cache/
+artifacts/
 
 # misc
 .DS_Store

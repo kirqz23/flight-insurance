@@ -48,7 +48,7 @@ contract FlightSuretyData {
     constructor() {
         contractOwner = msg.sender;
         operational = true;
-        registerAirline(msg.sender, "AIR1");
+        // registerAirline(msg.sender, "AIR1");
     }
 
     /********************************************************************************************/
